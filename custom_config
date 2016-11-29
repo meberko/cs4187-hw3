@@ -1,0 +1,4 @@
+DocumentRoot /home/mike/input
+OutputArea /tmp/hw3
+Alias /alias/ /tmp/myalias
+Alias /foo/ /tmp/myalias2
