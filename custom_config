@@ -1,4 +1,4 @@
-DocumentRoot /home/mike/input
+DocumentRoot /home/plt4115/input
 OutputArea /tmp/hw3
 Alias /alias/ /tmp/myalias
 Alias /foo/ /tmp/myalias2

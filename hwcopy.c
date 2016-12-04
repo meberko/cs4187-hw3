@@ -12,7 +12,7 @@
 
 char doc_root[BUFSIZE], out_area[BUFSIZE];
 static char *alias[ASIZE][2];
-int i, j, ai=0, aj=0;
+int i, j, k, ai=0;
 
 static void cleanAlias() {
     for(i=0; i<ASIZE; i++) {
@@ -58,8 +58,9 @@ static int configure(char *config_file) {
         else return INV_CONFIG;
     }
     if(doc_root == NULL || !strcmp(doc_root, "\0") || out_area == NULL || !strcmp(out_area, "\0")) return INV_CONFIG;
-    printf("doc_root: %s\nout_area: %s\n", doc_root, out_area);
+    printf("\n----------------------------------------------\ndoc_root: %s\nout_area: %s\n", doc_root, out_area);
     for(i = 0; i < ai; i++) printf("alias: %s-->%s\n", alias[i][0], alias[i][1]);
+    printf("----------------------------------------------\n\n");
     fclose(fp);
     return OK;
 }
@@ -86,7 +87,7 @@ static int getLine (char *prmpt, char *buff, size_t sz) {
 
 int main(int argc, char *argv[]) {
     int stat;
-    char config[BUFSIZE], input[BUFSIZE], full_inf[BUFSIZE], full_outf[BUFSIZE], *inf, *outf;
+    char config[BUFSIZE], input[BUFSIZE], dum_inf[BUFSIZE], dum_outf[BUFSIZE], *mod_inf_tokens[BUFSIZE], *mod_outf_tokens[BUFSIZE] , mod_inf[BUFSIZE], mod_outf[BUFSIZE], full_inf[BUFSIZE], full_outf[BUFSIZE], dummy_inf[BUFSIZE], dummy_outf[BUFSIZE], *inf_tokens[BUFSIZE], *outf_tokens[BUFSIZE], *inf, *outf;
     // Check argc
     if(argc == 1) {
         strncpy(config, ".config", BUFSIZE);
@@ -130,21 +131,83 @@ int main(int argc, char *argv[]) {
             fprintf(stderr, "Error: input not of requested form\n");
             exit(1);
         }
+        for(i=0; i<ai; i++) {
+            char *c;
+            if((c = strstr(inf, alias[i][0])) != NULL) {
+                strncpy(mod_inf, inf, c-inf);
+                strncat(mod_inf, alias[i][1], BUFSIZE);
+                strncat(mod_inf, c+strlen(alias[i][0])-1, BUFSIZE);
+            }
+            else strncpy(mod_inf, inf, BUFSIZE);
+            if((c = strstr(outf, alias[i][0])) != NULL) {
+                strncpy(mod_outf, outf, c-outf);
+                strncat(mod_outf, alias[i][1], BUFSIZE);
+                strncat(mod_outf, c+strlen(alias[i][0])-1, BUFSIZE);
+            }
+            else strncpy(mod_outf, outf, BUFSIZE);
+        }
         strncpy(full_inf, doc_root, BUFSIZE);
         strncpy(full_outf, out_area, BUFSIZE);
         strncat(full_inf, "/", BUFSIZE);
         strncat(full_outf, "/", BUFSIZE);
-        strncat(full_inf, inf, BUFSIZE);
-        strncat(full_outf, outf, BUFSIZE);
-        if( access( full_inf, R_OK ) != -1 ) {
+        strncat(full_inf, mod_inf, BUFSIZE);
+        strncat(full_outf, mod_outf, BUFSIZE);
+
+        printf("\n-------------------------\nInf: %s\nOutf: %s\n-------------------------\n\n", full_inf, full_outf);
+
+        strncpy(dummy_inf, full_inf, BUFSIZE);
+        inf_tokens[0] = strtok(dummy_inf, "/");
+        i = 1;
+        while((inf_tokens[i] = strtok(NULL, "/")) != NULL) i++;
+        k = 0;
+        for(j = 0; j < i; j++) {
+            if(!strcmp(inf_tokens[j], "..") && k!=0) k--;
+            else {
+              mod_inf_tokens[k] = inf_tokens[j];
+              k++;
+            }
+        }
+        for(j = 0; j < k; j++) {
+            if(j==0) strncpy(dum_inf, "/", BUFSIZE);
+            strncat(dum_inf, mod_inf_tokens[j], BUFSIZE);
+            strncat(dum_inf, "/", BUFSIZE);
+        }
+
+        strncpy(dummy_outf, full_outf, BUFSIZE);
+        outf_tokens[0] = strtok(dummy_outf, "/");
+        i = 1;
+        while((outf_tokens[i] = strtok(NULL, "/")) != NULL) i++;
+        k = 0;
+        for(j = 0; j < i; j++) {
+            if(!strcmp(outf_tokens[j], "..") && k!=0) k--;
+            else {
+              mod_outf_tokens[k] = outf_tokens[j];
+              k++;
+            }
+        }
+        for(j = 0; j < k; j++) {
+            if(j==0) strncpy(dum_outf, "/", BUFSIZE);
+            strncat(dum_outf, mod_outf_tokens[j], BUFSIZE);
+            strncat(dum_outf, "/", BUFSIZE);
+        }
+
+        if(strstr(dum_inf, doc_root) == NULL) {
+          fprintf(stderr, "Error: you are trying to get out of document root! Stop that!\n");
+          cont = 0;
+        }
+        if(strstr(dum_outf, out_area) == NULL) {
+          fprintf(stderr, "Error: you are trying to get out of output area! Stop that!\n");
+          cont = 0;
+        }
+        if( cont && access( mod_inf, R_OK ) != -1 ) {
             // file exists
             FILE *fpi, *fpo;
-            fpi = fopen(full_inf, "r");
+            fpi = fopen(mod_inf, "r");
             if(fpi == NULL) {
                 fprintf(stderr, "Error: could not open input file\n");
                 cont = 0;
             }
-            fpo = fopen(full_outf, "w");
+            fpo = fopen(mod_outf, "w");
             if(fpo == NULL) {
                 fprintf(stderr, "Error: could not open output file\n");
                 cont = 0;
@@ -156,7 +219,7 @@ int main(int argc, char *argv[]) {
                 fclose(fpo);
             }
         }
-        else fprintf(stderr, "Error: given input file doesn't exist\n");
+        else if(cont) fprintf(stderr, "Error: given input file doesn't exist\n");
     }
     cleanAlias();
     return OK;
