@@ -17,9 +17,41 @@ Making:
       commands will be stored.
 
       *******************************************************
-      * HW3COPY CAN ONLY BE RUN AS THE USER THAT RUNS MAKE! *
+      *  HWCOPY CAN ONLY BE RUN AS THE USER THAT RUNS MAKE! *
       *******************************************************
 
 Testing:
   1.  Ensure that you are acting as the user who ran make!
-  2.  Testing is difficult because you must use 
+  2.  Testing is difficult because you must use your own config to access
+      directories that exist on your machine. If the -c flag is not used, the
+      default .config file that comes zipped with this program will be used.
+
+      DocumentRoot and OutputArea should be of the form /absolute/path/to/root
+      (/ at the front, no / at the end).
+
+      Aliases should be of the form /alias/ /path/to/alias (surrounding /'s on
+      on first argument, same path format as above for second argument).
+
+      An example of how given filenames and aliases are handled using the
+      following config settings:
+
+          DocumentRoot /home/mike/input
+          OutputArea /tmp/hw3
+          Alias /alias/ /hw3
+
+      So, given a command:
+
+        > /alias/test.txt test.txt
+
+      will copy /home/mike/input/hw3/test.txt to /tmp/hw3/test.txt.
+
+   3. You can either run
+
+        > ./hwcopy
+
+      and have the program read lines from stdin to your heart's content, or
+      you can run
+
+        > echo "<input_file> <output_file>" | ./hwcopy
+
+      to run a single copy.

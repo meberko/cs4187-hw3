@@ -137,19 +137,18 @@ int main(int argc, char *argv[]) {
         for(i=0; i<ai; i++) {
             char *c;
             if((c = strstr(inf, alias[i][0])) != NULL) {
-                printf("%d\n", c-inf);
                 strncpy(mod_inf, inf, c-inf);
                 strncat(mod_inf, alias[i][1], BUFSIZE);
                 strncat(mod_inf, c+strlen(alias[i][0])-1, BUFSIZE);
-                printf("%s\n", mod_inf);
             }
             if((c = strstr(outf, alias[i][0])) != NULL) {
                 strncpy(mod_outf, outf, c-outf);
                 strncat(mod_outf, alias[i][1], BUFSIZE);
                 strncat(mod_outf, c+strlen(alias[i][0])-1, BUFSIZE);
             }
-            printf("%s\n", mod_inf);
         }
+        if(!strcmp(mod_inf, "")) strncpy(mod_inf, inf, BUFSIZE);
+        if(!strcmp(mod_outf, "")) strncpy(mod_outf, outf, BUFSIZE);
 
         // Add document root and output area to full input file path and full
         // output file paths respectively
@@ -162,8 +161,9 @@ int main(int argc, char *argv[]) {
         // output file path respectively
         strncat(full_inf, mod_inf, BUFSIZE);
         strncat(full_outf, mod_outf, BUFSIZE);
+        printf("%s\n", mod_outf);
 
-        printf("\n-------------------------------------------------------\nInf: %s\nOutf: %s\n-------------------------------------------------------\n\n", full_inf, full_outf);
+        printf("\n-------------------------------------------------------\nInf: %s\nOutf: %s\n-------------------------------------------------------\n", full_inf, full_outf);
 
         // Need dummy_inf to tokenize
         strncpy(dummy_inf, full_inf, BUFSIZE);
