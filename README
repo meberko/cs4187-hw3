@@ -1,0 +1,25 @@
+********************************************************************************
+|                                                                              |
+|                        COMS W4187: Homework 3 README                         |
+|                      Author: Michael Berkowitz (meb2235)                     |
+|                                                                              |
+********************************************************************************
+
+Steps for making and testing:
+
+Making:
+  1.  You should have copies of the files contained in the zip with this
+      README which are owned by the primary user. Navigate to the Makefile
+      directory and run
+        > make
+      the make command will create the directory /home/user/bin where the
+      executable files for encdec, encrypt, decrypt, password, and keyfile
+      commands will be stored.
+
+      *******************************************************
+      * HW3COPY CAN ONLY BE RUN AS THE USER THAT RUNS MAKE! *
+      *******************************************************
+
+Testing:
+  1.  Ensure that you are acting as the user who ran make!
+  2.  Testing is difficult because you must use 

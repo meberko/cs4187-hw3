@@ -15,8 +15,8 @@ static char *alias[ASIZE][2];
 int i, j, k, ai=0;
 
 static void cleanAlias() {
-    for(i=0; i<ASIZE; i++) {
-        for(j=0; j<ASIZE; j++) free(alias[i][j]);
+    for(i=0; i<ai; i++) {
+        for(j=0; j<ai; j++) free(alias[i][j]);
     }
 }
 
@@ -125,41 +125,58 @@ int main(int argc, char *argv[]) {
             cleanAlias();
             return stat;
         }
+        // Tokenize input into inf(ile) and outf(ile)
         inf = strtok(input, " ");
         outf = strtok(NULL, " ");
         if(inf == NULL || outf == NULL || strtok(NULL, " ") != NULL) {
             fprintf(stderr, "Error: input not of requested form\n");
             exit(1);
         }
+        // Iterate through aliases and search input and output files for each
+        // If it's there, replace the alias with its alias value
         for(i=0; i<ai; i++) {
             char *c;
             if((c = strstr(inf, alias[i][0])) != NULL) {
+                printf("%d\n", c-inf);
                 strncpy(mod_inf, inf, c-inf);
                 strncat(mod_inf, alias[i][1], BUFSIZE);
                 strncat(mod_inf, c+strlen(alias[i][0])-1, BUFSIZE);
+                printf("%s\n", mod_inf);
             }
-            else strncpy(mod_inf, inf, BUFSIZE);
             if((c = strstr(outf, alias[i][0])) != NULL) {
                 strncpy(mod_outf, outf, c-outf);
                 strncat(mod_outf, alias[i][1], BUFSIZE);
                 strncat(mod_outf, c+strlen(alias[i][0])-1, BUFSIZE);
             }
-            else strncpy(mod_outf, outf, BUFSIZE);
+            printf("%s\n", mod_inf);
         }
+
+        // Add document root and output area to full input file path and full
+        // output file paths respectively
         strncpy(full_inf, doc_root, BUFSIZE);
         strncpy(full_outf, out_area, BUFSIZE);
         strncat(full_inf, "/", BUFSIZE);
         strncat(full_outf, "/", BUFSIZE);
+        // Add the modified input file name and output file name with the
+        // aliases replaced accordingly to the full input file path and full
+        // output file path respectively
         strncat(full_inf, mod_inf, BUFSIZE);
         strncat(full_outf, mod_outf, BUFSIZE);
 
-        printf("\n-------------------------\nInf: %s\nOutf: %s\n-------------------------\n\n", full_inf, full_outf);
+        printf("\n-------------------------------------------------------\nInf: %s\nOutf: %s\n-------------------------------------------------------\n\n", full_inf, full_outf);
 
+        // Need dummy_inf to tokenize
         strncpy(dummy_inf, full_inf, BUFSIZE);
+        // Tokenize full input file path by "/"
         inf_tokens[0] = strtok(dummy_inf, "/");
         i = 1;
         while((inf_tokens[i] = strtok(NULL, "/")) != NULL) i++;
         k = 0;
+        // Search out "..", use it to remove the preceeding directory.
+        // Do this for input and output file paths. We will then search for the
+        // document root and output area in the final result. If they are not
+        // found, we have determined an attempt to get out of the document root
+        // or output file
         for(j = 0; j < i; j++) {
             if(!strcmp(inf_tokens[j], "..") && k!=0) k--;
             else {
@@ -199,15 +216,17 @@ int main(int argc, char *argv[]) {
           fprintf(stderr, "Error: you are trying to get out of output area! Stop that!\n");
           cont = 0;
         }
-        if( cont && access( mod_inf, R_OK ) != -1 ) {
+        // If we pass all these checks and the input file exists, execute the
+        // copy!!
+        if( cont && access( full_inf, R_OK ) != -1 ) {
             // file exists
             FILE *fpi, *fpo;
-            fpi = fopen(mod_inf, "r");
+            fpi = fopen(full_inf, "r");
             if(fpi == NULL) {
                 fprintf(stderr, "Error: could not open input file\n");
                 cont = 0;
             }
-            fpo = fopen(mod_outf, "w");
+            fpo = fopen(full_outf, "w");
             if(fpo == NULL) {
                 fprintf(stderr, "Error: could not open output file\n");
                 cont = 0;
@@ -217,10 +236,13 @@ int main(int argc, char *argv[]) {
                 while ((a = fgetc(fpi)) != EOF) fputc(a, fpo);
                 fclose(fpi);
                 fclose(fpo);
+                printf("\n-------------------------------------------------------\nSuccess! %s copied to %s\n-------------------------------------------------------\n", full_inf, full_outf);
             }
         }
         else if(cont) fprintf(stderr, "Error: given input file doesn't exist\n");
     }
+    printf("\n\n");
+    // Free all the aliases
     cleanAlias();
     return OK;
 }
