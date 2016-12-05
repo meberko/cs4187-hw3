@@ -12,9 +12,7 @@ Making:
       README which are owned by the primary user. Navigate to the Makefile
       directory and run
         > make
-      the make command will create the directory /home/user/bin where the
-      executable files for encdec, encrypt, decrypt, password, and keyfile
-      commands will be stored.
+      the make command will create the executable hwcopy.
 
       *******************************************************
       *  HWCOPY CAN ONLY BE RUN AS THE USER THAT RUNS MAKE! *
@@ -22,9 +20,21 @@ Making:
 
 Testing:
   1.  Ensure that you are acting as the user who ran make!
-  2.  Testing is difficult because you must use your own config to access
-      directories that exist on your machine. If the -c flag is not used, the
-      default .config file that comes zipped with this program will be used.
+  2.  Run
+
+        > make test
+
+      The output should be reasonably easy to read.
+      Tests 1, 2, and 3 should produce success messages, diff the input files
+      with the output files, and report that they are identical.
+      Test 4 and 5 try to tunnel their way out of the document root and output
+      area, respectively. Appropriate error messages are reported in either
+      case.
+      Test 6 tests the ability to successfully parse "/../" in a filename. It
+      should report similarly to tests 1, 2, and 3.
+
+  3.  If the -c flag is not used, the default .config file that comes zipped
+      with this program will be used.
 
       DocumentRoot and OutputArea should be of the form /absolute/path/to/root
       (/ at the front, no / at the end).
@@ -45,7 +55,7 @@ Testing:
 
       will copy /home/mike/input/hw3/test.txt to /tmp/hw3/test.txt.
 
-   3. You can either run
+   4. You can either run
 
         > ./hwcopy
 

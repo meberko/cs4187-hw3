@@ -161,9 +161,8 @@ int main(int argc, char *argv[]) {
         // output file path respectively
         strncat(full_inf, mod_inf, BUFSIZE);
         strncat(full_outf, mod_outf, BUFSIZE);
-        printf("%s\n", mod_outf);
 
-        printf("\n-------------------------------------------------------\nInf: %s\nOutf: %s\n-------------------------------------------------------\n", full_inf, full_outf);
+        //printf("\n-------------------------------------------------------\nInf: %s\nOutf: %s\n-------------------------------------------------------\n", full_inf, full_outf);
 
         // Need dummy_inf to tokenize
         strncpy(dummy_inf, full_inf, BUFSIZE);
@@ -236,7 +235,7 @@ int main(int argc, char *argv[]) {
                 while ((a = fgetc(fpi)) != EOF) fputc(a, fpo);
                 fclose(fpi);
                 fclose(fpo);
-                printf("\n-------------------------------------------------------\nSuccess! %s copied to %s\n-------------------------------------------------------\n", full_inf, full_outf);
+                printf("\n----------------------------------------------\nSuccess! %s copied to %s\n----------------------------------------------\n", full_inf, full_outf);
             }
         }
         else if(cont) fprintf(stderr, "Error: given input file doesn't exist\n");
