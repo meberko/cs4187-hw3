@@ -1,4 +1,3 @@
-DocumentRoot /home/plt4115/input
+DocumentRoot /home/mike/input
 OutputArea /tmp/hw3
-Alias /alias/ /tmp/myalias
-Alias /foo/ /tmp/myalias2
+Alias /foo/ /etc

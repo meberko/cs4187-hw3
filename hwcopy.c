@@ -16,7 +16,7 @@ int i, j, k, ai=0;
 
 static void cleanAlias() {
     for(i=0; i<ai; i++) {
-        for(j=0; j<ai; j++) free(alias[i][j]);
+        for(j=0; j<2; j++) free(alias[i][j]);
     }
 }
 
@@ -49,7 +49,7 @@ static int configure(char *config_file) {
         }
         else if(strncmp(line_tokens[0], "Alias", BUFSIZE) == 0) {
             if(i == 3 && ai < ASIZE) {
-                strncpy(alias[ai][0], line_tokens[1], BUFSIZE);
+                strncpy(alias[ai][0], line_tokens[1], strlen(line_tokens[1])-1);
                 strncpy(alias[ai][1], line_tokens[2], BUFSIZE);
                 ai++;
             }
@@ -58,8 +58,8 @@ static int configure(char *config_file) {
         else return INV_CONFIG;
     }
     if(doc_root == NULL || !strcmp(doc_root, "\0") || out_area == NULL || !strcmp(out_area, "\0")) return INV_CONFIG;
-    printf("\n----------------------------------------------\ndoc_root: %s\nout_area: %s\n", doc_root, out_area);
-    for(i = 0; i < ai; i++) printf("alias: %s-->%s\n", alias[i][0], alias[i][1]);
+    printf("\n----------------------------------------------\nDocument Root: %s\nOutput Area: %s\n", doc_root, out_area);
+    for(i = 0; i < ai; i++) printf("Alias: %s/-->%s\n", alias[i][0], alias[i][1]);
     printf("----------------------------------------------\n\n");
     fclose(fp);
     return OK;
@@ -87,7 +87,7 @@ static int getLine (char *prmpt, char *buff, size_t sz) {
 
 int main(int argc, char *argv[]) {
     int stat;
-    char config[BUFSIZE], input[BUFSIZE], dum_inf[BUFSIZE], *mod_inf_tokens[BUFSIZE] , mod_inf[BUFSIZE], mod_outf[BUFSIZE], full_inf[BUFSIZE], full_outf[BUFSIZE], dummy_inf[BUFSIZE], *inf_tokens[BUFSIZE], *inf, *outf;
+    char config[BUFSIZE], input[BUFSIZE], dum_inf[BUFSIZE], *mod_inf_tokens[BUFSIZE], full_inf[BUFSIZE], full_outf[BUFSIZE], dummy_inf[BUFSIZE], *inf_tokens[BUFSIZE], *inf, *outf;
     // Check argc
     if(argc == 1) {
         strncpy(config, ".config", BUFSIZE);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 
     // Configure
     if(configure(config) == INV_CONFIG) {
-        fprintf(stderr, "Error: invalid config file given\n");
+        fprintf(stderr, "\nError: invalid config file given\n");
         exit(1);
     }
 
@@ -115,13 +115,13 @@ int main(int argc, char *argv[]) {
         int cont = 1;
         // If there's no input, exit w/ error
         if(stat == NO_INPUT){
-            fprintf(stderr, "Error: no input!\n");
+            fprintf(stderr, "\nError: no input!\n");
             cleanAlias();
             return stat;
         }
         // If input is too long, exit w/ error
         if(stat == TOO_LONG){
-            fprintf(stderr, "Error: input too long, please limit to %d characters\n", BUFSIZE);
+            fprintf(stderr, "\nError: input too long, please limit to %d characters\n", BUFSIZE);
             cleanAlias();
             return stat;
         }
@@ -129,26 +129,30 @@ int main(int argc, char *argv[]) {
         inf = strtok(input, " ");
         outf = strtok(NULL, " ");
         if(inf == NULL || outf == NULL || strtok(NULL, " ") != NULL) {
-            fprintf(stderr, "Error: input not of requested form\n");
+            fprintf(stderr, "\nError: input not of requested form\n");
             exit(1);
         }
-        // Iterate through aliases and search input and output files for each
-        // If it's there, replace the alias with its alias value
+        // Remove any left over alias symlinks
+        for(i=0; i<ai; i++) {
+            char rm_cmd[BUFSIZE];
+            snprintf(rm_cmd, BUFSIZE, "rm -f %s/%s", doc_root, alias[i][0]+1);
+            system(rm_cmd);
+        }
+        // Add all alias symlinks
+        for(i=0; i < ai; i++) {
+            char sym_cmd[BUFSIZE];
+            snprintf(sym_cmd, BUFSIZE, "ln -s %s %s/%s", alias[i][1], doc_root, alias[i][0]+1);
+            system(sym_cmd);
+        }
+        // Iterate through aliases and search output files for each
+        // If it's there, report an error. No aliases in output values
         for(i=0; i<ai; i++) {
             char *c;
-            if((c = strstr(inf, alias[i][0])) != NULL) {
-                strncpy(mod_inf, inf, c-inf);
-                strncat(mod_inf, alias[i][1], BUFSIZE);
-                strncat(mod_inf, c+strlen(alias[i][0])-1, BUFSIZE);
-            }
             if((c = strstr(outf, alias[i][0])) != NULL) {
-                strncpy(mod_outf, outf, c-outf);
-                strncat(mod_outf, alias[i][1], BUFSIZE);
-                strncat(mod_outf, c+strlen(alias[i][0])-1, BUFSIZE);
+                fprintf(stderr, "\nError: aliases not allowed in output file\n");
+                cont = 0;
             }
         }
-        if(!strcmp(mod_inf, "")) strncpy(mod_inf, inf, BUFSIZE);
-        if(!strcmp(mod_outf, "")) strncpy(mod_outf, outf, BUFSIZE);
 
         // Add document root and output area to full input file path and full
         // output file paths respectively
@@ -156,14 +160,13 @@ int main(int argc, char *argv[]) {
         strncpy(full_outf, out_area, BUFSIZE);
         strncat(full_inf, "/", BUFSIZE);
         strncat(full_outf, "/", BUFSIZE);
-        // Add the modified input file name and output file name with the
-        // aliases replaced accordingly to the full input file path and full
-        // output file path respectively
-        strncat(full_inf, mod_inf, BUFSIZE);
-        strncat(full_outf, mod_outf, BUFSIZE);
-
-        //printf("\n-------------------------------------------------------\nInf: %s\nOutf: %s\n-------------------------------------------------------\n", full_inf, full_outf);
-
+        /*
+         *  Add the modified input file name and output file name with the
+         *  aliases replaced accordingly to the full input file path and full
+         *  output file path respectively
+         */
+        strncat(full_inf, inf, BUFSIZE);
+        strncat(full_outf, outf, BUFSIZE);
         // Need dummy_inf to tokenize
         strncpy(dummy_inf, full_inf, BUFSIZE);
         // Tokenize full input file path by "/"
@@ -171,12 +174,18 @@ int main(int argc, char *argv[]) {
         i = 1;
         while((inf_tokens[i] = strtok(NULL, "/")) != NULL) i++;
         k = 0;
-        // Search out "..", use it to remove the preceeding directory.
-        // Do this for input file paths, output handled by chroot. We will then
-        // search for the document root in the final result. If they are not
-        // found, we have determined an attempt to get out of the document root
+        /*
+         *  Search out "..", use it to remove the preceeding directory.
+         *  Do this for input file paths, output handled by chroot. We will then
+         *  search for the document root in the final result. If they are not
+         *  found, we have determined an attempt to get out of the document root
+         */
         for(j = 0; j < i; j++) {
             if(!strcmp(inf_tokens[j], "..") && k!=0) k--;
+            else if(!strcmp(inf_tokens[j], "..") && k==0) {
+                fprintf(stderr, "\nError: you are trying to get out of document root! Stop that!\n");
+                cont = 0;
+            }
             else {
               mod_inf_tokens[k] = inf_tokens[j];
               k++;
@@ -189,7 +198,7 @@ int main(int argc, char *argv[]) {
         }
 
         if(strstr(dum_inf, doc_root) == NULL) {
-          fprintf(stderr, "Error: you are trying to get out of document root! Stop that!\n");
+          fprintf(stderr, "\nError: you are trying to get out of document root! Stop that!\n");
           cont = 0;
         }
 
@@ -200,15 +209,14 @@ int main(int argc, char *argv[]) {
             FILE *fpi, *fpo;
             fpi = fopen(full_inf, "r");
             if(fpi == NULL) {
-                fprintf(stderr, "Error: could not open input file\n");
+                fprintf(stderr, "\nError: could not open input file\n");
                 cont = 0;
             }
             chdir(out_area);
             chroot(out_area);
-            if(mod_outf[0] == '/') fpo = fopen(mod_outf+1, "w");
-            else fpo = fopen(mod_outf, "w");
+            fpo = fopen(outf, "w");
             if(fpo == NULL) {
-                fprintf(stderr, "Error: you are trying to get out of document root! Stop that!\n");
+                fprintf(stderr, "\nError: you are trying to get out of output area! Stop that!\n");
                 cont = 0;
             }
             if(cont) {
@@ -219,10 +227,15 @@ int main(int argc, char *argv[]) {
                 printf("\n----------------------------------------------\nSuccess! %s copied to %s\n----------------------------------------------\n", full_inf, full_outf);
             }
         }
-        else if(cont) fprintf(stderr, "Error: given input file doesn't exist\n");
+        else if(cont) fprintf(stderr, "\nError: given input file doesn't exist\n");
     }
     printf("\n\n");
     // Free all the aliases
+    for(i=0; i<ai; i++) {
+        char rm_cmd[BUFSIZE];
+        snprintf(rm_cmd, BUFSIZE, "rm -f %s/%s", doc_root, alias[i][0]+1);
+        system(rm_cmd);
+    }
     cleanAlias();
     return OK;
 }

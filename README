@@ -29,8 +29,10 @@ Testing:
       Tests 1, 2, and 3 should produce success messages, diff the input files
       with the output files, and report that they are identical.
       Test 4 and 5 try to tunnel their way out of the document root and output
-      area, respectively. Appropriate error messages are reported in either
-      case.
+      area, respectively. Appropriate error message is reported in the case of
+      trying to break out of chroot. Parsing of the output file was forbidden
+      so a success message may be reported, but the file is not actually written
+      outside chroot.
       Test 6 tests the ability to successfully parse "/../" in a filename. It
       should report similarly to tests 1, 2, and 3.
 
@@ -56,13 +58,16 @@ Testing:
 
       will copy /home/mike/input/hw3/test.txt to /tmp/hw3/test.txt.
 
+      Note about input and output files: any filenames that begin with "../"
+      are automatically rejected. No good can come of that so I won't allow it.
+
    4. You can either run
 
-        > ./hwcopy
+        > sudo ./hwcopy
 
       and have the program read lines from stdin to your heart's content, or
       you can run
 
-        > echo "<input_file> <output_file>" | ./hwcopy
+        > echo "<input_file> <output_file>" | sudo ./hwcopy
 
       to run a single copy.

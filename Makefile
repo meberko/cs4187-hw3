@@ -23,14 +23,14 @@ test:
 	@echo "|              	 TEST 2                      |"
 	@echo "----------------------------------------------"
 	@echo ""
-	echo "cp /alias/cp" | ./hwcopy
-	diff -s /bin/cp /tmp/hw3/cp
+	echo "/alias/passwd /passwd" | ./hwcopy
+	diff -s /etc/passwd /tmp/passwd
 	@echo ""
 	@echo "----------------------------------------------"
 	@echo "|              	 TEST 3                      |"
 	@echo "----------------------------------------------"
 	@echo ""
-	echo "cp /alias2/cp" | ./hwcopy
+	echo "cp /dir/cp" | ./hwcopy
 	diff -s /bin/cp /tmp/dir/cp
 	@echo ""
 	@echo "----------------------------------------------"
@@ -53,4 +53,4 @@ test:
 	diff -s /bin/mkdir /tmp/mkdir
 
 clean:
-	@rm -rf *.o hwcopy /tmp/hw3 /tmp/dir /tmp/ls
+	@rm -rf *.o hwcopy
