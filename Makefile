@@ -53,4 +53,4 @@ test:
 	diff -s /bin/mkdir /tmp/mkdir
 
 clean:
-	@rm -rf *.o hwcopy
+	@rm -rf *.o hwcopy /tmp/hw3 /tmp/dir /tmp/ls

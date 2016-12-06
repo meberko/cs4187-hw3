@@ -87,7 +87,7 @@ static int getLine (char *prmpt, char *buff, size_t sz) {
 
 int main(int argc, char *argv[]) {
     int stat;
-    char config[BUFSIZE], input[BUFSIZE], dum_inf[BUFSIZE], dum_outf[BUFSIZE], *mod_inf_tokens[BUFSIZE], *mod_outf_tokens[BUFSIZE] , mod_inf[BUFSIZE], mod_outf[BUFSIZE], full_inf[BUFSIZE], full_outf[BUFSIZE], dummy_inf[BUFSIZE], dummy_outf[BUFSIZE], *inf_tokens[BUFSIZE], *outf_tokens[BUFSIZE], *inf, *outf;
+    char config[BUFSIZE], input[BUFSIZE], dum_inf[BUFSIZE], *mod_inf_tokens[BUFSIZE] , mod_inf[BUFSIZE], mod_outf[BUFSIZE], full_inf[BUFSIZE], full_outf[BUFSIZE], dummy_inf[BUFSIZE], *inf_tokens[BUFSIZE], *inf, *outf;
     // Check argc
     if(argc == 1) {
         strncpy(config, ".config", BUFSIZE);
@@ -172,10 +172,9 @@ int main(int argc, char *argv[]) {
         while((inf_tokens[i] = strtok(NULL, "/")) != NULL) i++;
         k = 0;
         // Search out "..", use it to remove the preceeding directory.
-        // Do this for input and output file paths. We will then search for the
-        // document root and output area in the final result. If they are not
+        // Do this for input file paths, output handled by chroot. We will then
+        // search for the document root in the final result. If they are not
         // found, we have determined an attempt to get out of the document root
-        // or output file
         for(j = 0; j < i; j++) {
             if(!strcmp(inf_tokens[j], "..") && k!=0) k--;
             else {
@@ -189,32 +188,11 @@ int main(int argc, char *argv[]) {
             strncat(dum_inf, "/", BUFSIZE);
         }
 
-        strncpy(dummy_outf, full_outf, BUFSIZE);
-        outf_tokens[0] = strtok(dummy_outf, "/");
-        i = 1;
-        while((outf_tokens[i] = strtok(NULL, "/")) != NULL) i++;
-        k = 0;
-        for(j = 0; j < i; j++) {
-            if(!strcmp(outf_tokens[j], "..") && k!=0) k--;
-            else {
-              mod_outf_tokens[k] = outf_tokens[j];
-              k++;
-            }
-        }
-        for(j = 0; j < k; j++) {
-            if(j==0) strncpy(dum_outf, "/", BUFSIZE);
-            strncat(dum_outf, mod_outf_tokens[j], BUFSIZE);
-            strncat(dum_outf, "/", BUFSIZE);
-        }
-
         if(strstr(dum_inf, doc_root) == NULL) {
           fprintf(stderr, "Error: you are trying to get out of document root! Stop that!\n");
           cont = 0;
         }
-        if(strstr(dum_outf, out_area) == NULL) {
-          fprintf(stderr, "Error: you are trying to get out of output area! Stop that!\n");
-          cont = 0;
-        }
+
         // If we pass all these checks and the input file exists, execute the
         // copy!!
         if( cont && access( full_inf, R_OK ) != -1 ) {
@@ -225,9 +203,12 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "Error: could not open input file\n");
                 cont = 0;
             }
-            fpo = fopen(full_outf, "w");
+            chdir(out_area);
+            chroot(out_area);
+            if(mod_outf[0] == '/') fpo = fopen(mod_outf+1, "w");
+            else fpo = fopen(mod_outf, "w");
             if(fpo == NULL) {
-                fprintf(stderr, "Error: could not open output file\n");
+                fprintf(stderr, "Error: you are trying to get out of document root! Stop that!\n");
                 cont = 0;
             }
             if(cont) {

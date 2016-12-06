@@ -22,9 +22,10 @@ Testing:
   1.  Ensure that you are acting as the user who ran make!
   2.  Run
 
-        > make test
+        > sudo make test
 
-      The output should be reasonably easy to read.
+      The output should be reasonably easy to read. Sudo required because
+      chroot is used for output file confinement.
       Tests 1, 2, and 3 should produce success messages, diff the input files
       with the output files, and report that they are identical.
       Test 4 and 5 try to tunnel their way out of the document root and output
